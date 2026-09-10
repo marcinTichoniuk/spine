@@ -60,7 +60,7 @@ Every Stage B/C step in `ROUTE.md` ends by rewriting the file it just took apart
 
 | choice | why |
 |---|---|
-| **TypeScript, run natively by Node** (`node server.ts`) | decided 2026-09-10. No bundler, no build step, no `ts-node` — so `node <file>` stays legible while HTTP and SQL are the thing being learned. TS itself is home turf, so it costs nothing. A compile step arrives properly at route step 14 (multi-stage builds), not on day one. Needs Node 22.18+ or 24 |
+| **TypeScript, run natively by Node** (`node server.ts`) | decided 2026-09-10. No bundler, no build step, no `ts-node` — so `node <file>` stays legible while HTTP and SQL are the thing being learned. TS itself is home turf, so it costs nothing. A compile step arrives properly at route step 14 (multi-stage builds), not on day one. **Node is pinned to 24.19.0 in `mise.toml`** — the Dockerfile at route step 7 must use a matching `node:24` base image, or the container will fail to run a `.ts` file that works fine on his Mac. That mismatch is a textbook *quietly wrong*: flag it when the Dockerfile gets pasted |
 | **Fastify**, not Next API routes or NestJS | learn HTTP before the wrapper |
 | **Vite + React**, not Next.js | Vite's output is static files Caddy serves directly. Next brings its own server and would hide the request path that route steps 13 and 16 exist to teach |
 | **Raw SQL, no ORM** until phase 2 | starting SQL from zero, an ORM means learning Prisma instead of SQL. Kysely or Drizzle arrives in phase 2 as a deliberate "see what it was hiding" moment. Accepted cost: slower, weaker type safety |
