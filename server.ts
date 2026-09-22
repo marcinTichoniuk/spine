@@ -17,4 +17,17 @@ app.get("/api/links", async () => {
   return { data: res.rows, status: "ok" };
 });
 
+app.post("/api/links", async (req, rep) => {
+  const { body } = req;
+
+  const query = {
+    text: "INSERT INTO links (url, title) VALUES ($1, $2) RETURNING *",
+    values: [body.url, body.title],
+  };
+
+  const res = await pool.query(query);
+
+  rep.code(201).send({ data: res.rows[0], status: "ok" });
+});
+
 await app.listen({ port: 3000 });
