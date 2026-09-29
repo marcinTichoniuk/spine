@@ -17,6 +17,7 @@ app.get("/api/links", async () => {
   return { data: res.rows, status: "ok" };
 });
 
+// TODO: input validation
 app.post("/api/links", async (req, rep) => {
   const { body } = req;
 
@@ -30,4 +31,4 @@ app.post("/api/links", async (req, rep) => {
   rep.code(201).send({ data: res.rows[0], status: "ok" });
 });
 
-await app.listen({ port: 3000 });
+await app.listen({ port: 3000, host: "0.0.0.0" });
