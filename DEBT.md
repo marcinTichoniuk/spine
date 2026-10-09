@@ -66,6 +66,22 @@ Worked example:
   Told: `<Mac port>:<container port>`; Docker forwards to the container's `eth0` door, so the app must listen on `0.0.0.0`. Service names work as hostnames on the Compose network. `depends_on` waits for the container to start, not for Postgres to be ready.
   Open: I don't know what on my Mac holds port 3000 while forwarding, who answers the name `db`, or what "ready" would mean for `depends_on`.
 
+- caddy/Caddyfile: `:80 { respond "hello from caddy" }`
+  Told: `:80` is the site address: any name, port 80, plain HTTP, so Caddy turns automatic HTTPS off (its log says so). `respond` is a directive: answer every request with this text and status 200.
+  Open: I know a domain name in the address will turn HTTPS on; I don't know what Caddy does differently for a name than for `:80`.
+
+- compose.yaml: the `caddy` service (`image: caddy:2.11.7`, `ports: "80:80"`, `volumes: ./caddy:/etc/caddy`)
+  Told: a ready image, no Dockerfile. The image reads `/etc/caddy/Caddyfile` (path fixed by the image); my `./caddy` folder appears there. Mount the folder, not the file: editors replace the file on save, and a file mount keeps showing the old one. Caddy reads the file only at start, so after an edit: `docker compose restart caddy`.
+  Open: I know my folder shows up at `/etc/caddy`; I don't know if it is a copy or the same files, or where `/data` and `/config` (in the logs) live.
+
+- caddy/Caddyfile: `reverse_proxy /api/* api:3000`
+  Told: Vite's `proxy` line, moved into Caddy. `/api/*` is a matcher: only these paths. `api:3000` is the Compose service name (`localhost` would be Caddy's own container). Caddy makes a new request to Fastify and sends the answer back as its own, stamped `Via: 1.1 Caddy`.
+  Open: I know a path with no matching line gets an empty 200; I don't know which line wins when two lines could match the same path.
+
+- caddy/Caddyfile: `basic_auth { marcin <hash> }`, hash from `docker compose exec caddy caddy hash-password`
+  Told: one username and password for the whole site, checked before anything is forwarded. No `Authorization` header → `401` + `WWW-Authenticate`, and the browser shows its popup. The header is `username:password` in base64 (I decoded `marcin:wrong` myself), so it is safe only over HTTPS. The file holds a hash, and the repo is public, so the password must be long and random.
+  Open: I know Caddy hashes what it gets and compares; I don't know why a hash cannot be turned back into the password, or why that makes a long password matter. (Phase 1, password storage.)
+
 ## Cleared
 
 <!-- move entries here with a one-line note on what made it click, or just delete them.

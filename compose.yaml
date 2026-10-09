@@ -1,4 +1,11 @@
 services:
+  caddy:
+    image: caddy:2.11.7
+    ports:
+      - "80:80"
+    volumes:
+      - ./caddy:/etc/caddy
+
   db:
     image: postgres:18
     environment:
