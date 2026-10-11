@@ -82,6 +82,14 @@ Worked example:
   Told: one username and password for the whole site, checked before anything is forwarded. No `Authorization` header → `401` + `WWW-Authenticate`, and the browser shows its popup. The header is `username:password` in base64 (I decoded `marcin:wrong` myself), so it is safe only over HTTPS. The file holds a hash, and the repo is public, so the password must be long and random.
   Open: I know Caddy hashes what it gets and compares; I don't know why a hash cannot be turned back into the password, or why that makes a long password matter. (Phase 1, password storage.)
 
+- caddy/Caddyfile: `root * /srv` and `file_server`
+  Told: `root` is the folder Caddy looks in, inside its own container; `/srv` is my choice (Linux convention, Caddy's Docker Hub examples), and it only has to match the mount in `compose.yaml`. `file_server` answers with the file that matches the URL path; `/` gives `index.html`. No file → Caddy's own empty `404`.
+  Open: I know a missing file gives 404; I don't know what happens for a React page URL that is not a file (like `/links/5`).
+
+- compose.yaml: `- ./web/dist:/srv` under the `caddy` service
+  Told: my Mac folder appears inside Caddy's container at `/srv`, the folder `root` points to. Mounts are fixed when a container is created, so after a `compose.yaml` change: `up -d` (new container), not `restart` (same container, old settings). `web/dist` comes from `npm run build` and is not in git.
+  Open: I know it works on the Mac because `web/dist` is there; I don't know how the files get to the VPS, where `git clone` will not bring them.
+
 ## Cleared
 
 <!-- move entries here with a one-line note on what made it click, or just delete them.

@@ -1,0 +1,8 @@
+:80 {
+        basic_auth {
+                marcin $2a$14$vaHlXjo0PsA.EjcH3zccu.xQk6PBepCF0sTFSyMmjsDesTUorZxG6
+        }
+        reverse_proxy /api/* api:3000
+        root * /srv
+        file_server
+}

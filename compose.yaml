@@ -5,6 +5,7 @@ services:
       - "80:80"
     volumes:
       - ./caddy:/etc/caddy
+      - ./web/dist:/srv
 
   db:
     image: postgres:18
