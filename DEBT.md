@@ -90,6 +90,10 @@ Worked example:
   Told: my Mac folder appears inside Caddy's container at `/srv`, the folder `root` points to. Mounts are fixed when a container is created, so after a `compose.yaml` change: `up -d` (new container), not `restart` (same container, old settings). `web/dist` comes from `npm run build` and is not in git.
   Open: I know it works on the Mac because `web/dist` is there; I don't know how the files get to the VPS, where `git clone` will not bring them.
 
+- (typed command, VPS): `sudo docker run --rm --user node --volume /home/ubuntu/spine/web:/app --workdir /app node:24.19.0-slim npm ci` (then the same with `npm run build`)
+  Told: the VPS has no Node, so a throwaway container borrows it from the image. `--volume` = a bind mount: the VPS folder `web` appears at `/app` (same folder, not a copy). `--workdir /app` = start there (like `WORKDIR`). `--user node` = UID 1000 = `ubuntu` on the VPS, so the files are not owned by root. `--rm` deletes the container; the image and the files stay.
+  Open: I can explain each flag; I don't know how step 14 does the same inside a Dockerfile, with no mount.
+
 ## Cleared
 
 <!-- move entries here with a one-line note on what made it click, or just delete them.
