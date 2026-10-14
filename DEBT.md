@@ -94,6 +94,26 @@ Worked example:
   Told: the VPS has no Node, so a throwaway container borrows it from the image. `--volume` = a bind mount: the VPS folder `web` appears at `/app` (same folder, not a copy). `--workdir /app` = start there (like `WORKDIR`). `--user node` = UID 1000 = `ubuntu` on the VPS, so the files are not owned by root. `--rm` deletes the container; the image and the files stay.
   Open: I can explain each flag; I don't know how step 14 does the same inside a Dockerfile, with no mount.
 
+- compose.yaml: `"127.0.0.1:3000:3000"` under the `api` service
+  Told: the address in front limits who can open the port on the host: only programs on the same machine. The internet cannot reach Fastify directly anymore, so every outside request goes through Caddy and its password. Caddy still reaches `api:3000` over Docker's network. I saw it: `localhost:3000` → 200, `192.168.0.17:3000` → "Couldn't connect", `192.168.0.17:80` → Caddy's 401.
+  Open: I know the internet cannot reach 3000; I don't know why my own `curl` on the VPS showed up in Fastify's log as `172.18.0.1`, not `127.0.0.1`.
+
+- compose.yaml: `"443:443"` under the `caddy` service
+  Told: HTTPS arrives on 443, so the host passes it to Caddy's container. An open port is not enough: with `:80` in the `Caddyfile`, curl got `(35) SSL_connect` (door open, nobody inside), not `(7) Couldn't connect` (no door). Caddy listens on 443 only when the address line has a name.
+  Open: I know 80 must stay open for the challenge and the redirect; I don't know what the redirect response looks like.
+
+- compose.yaml: `caddy_data:/data` under `caddy`, and `caddy_data:` under the top-level `volumes:`
+  Told: Caddy saves its certificate in `/data` (path fixed by the image). Without a named volume, every recreated container asks Let's Encrypt again, and the limit is 5 certificates per name per week. `caddy_data` is my name; same pattern as `db-data:/var/lib/postgresql`.
+  Open: I know the certificate lives there; I don't know what else Caddy keeps in `/data`, or what `/config` from the logs is for.
+
+- caddy/Caddyfile: `{$SITE_ADDRESS} {` as the first line
+  Told: one file in git, two machines. The Mac needs `:80` (any name, plain HTTP); the VPS needs the domain, because a name in the address line is what turns HTTPS on. `{$NAME}` is Caddy's env-var syntax (`$` inside the braces; Compose's is `${NAME}`). I saw it empty: line 1 became `{`, Caddy read the block as the global options block, and stopped with `unrecognized global option: basic_auth` (only `caddy adapt` printed it; `logs` showed no error).
+  Open: I know an empty variable changes what the file means; I don't know what else can go in the global options block.
+
+- compose.yaml: `environment: SITE_ADDRESS: ${SITE_ADDRESS:-:80}` under `caddy`
+  Told: passes `SITE_ADDRESS` into the Caddy container. `:-:80` is Compose's syntax for "if missing or empty in `.env`, use `:80`". The Mac's `.env` has no `SITE_ADDRESS`, so it gets `:80`; the VPS `.env` will hold the domain.
+  Open: I know the default fills the gap; I don't know where else Compose looks for `SITE_ADDRESS` besides `.env`.
+
 ## Cleared
 
 <!-- move entries here with a one-line note on what made it click, or just delete them.
