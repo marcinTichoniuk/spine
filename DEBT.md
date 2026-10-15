@@ -99,8 +99,8 @@ Worked example:
   Open: I know the internet cannot reach 3000; I don't know why my own `curl` on the VPS showed up in Fastify's log as `172.18.0.1`, not `127.0.0.1`.
 
 - compose.yaml: `"443:443"` under the `caddy` service
-  Told: HTTPS arrives on 443, so the host passes it to Caddy's container. An open port is not enough: with `:80` in the `Caddyfile`, curl got `(35) SSL_connect` (door open, nobody inside), not `(7) Couldn't connect` (no door). Caddy listens on 443 only when the address line has a name.
-  Open: I know 80 must stay open for the challenge and the redirect; I don't know what the redirect response looks like.
+  Told: HTTPS arrives on 443, so the host passes it to Caddy's container. An open port is not enough: with `:80` in the `Caddyfile`, curl got `(35) SSL_connect` (door open, nobody inside), not `(7) Couldn't connect` (no door). Caddy listens on 443 only when the address line has a name. Seen on the VPS: port 80 answers `308 Permanent Redirect` + `Location: https://…`, before any password check.
+  Open: I know `"443:443"` forwards TCP; I don't know why HTTP/3 (`alt-svc: h3`) would need `"443:443/udp"` as well.
 
 - compose.yaml: `caddy_data:/data` under `caddy`, and `caddy_data:` under the top-level `volumes:`
   Told: Caddy saves its certificate in `/data` (path fixed by the image). Without a named volume, every recreated container asks Let's Encrypt again, and the limit is 5 certificates per name per week. `caddy_data` is my name; same pattern as `db-data:/var/lib/postgresql`.
