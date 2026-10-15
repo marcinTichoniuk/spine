@@ -7,8 +7,16 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-app.get("/api/health", async () => {
-  return { status: "ok" };
+app.get("/api/health", async (req, rep) => {
+  try {
+    await pool.query("SELECT 1");
+
+    return { status: "ok", db: "ok" };
+  } catch (error) {
+    rep.code(503);
+
+    return { status: "error", db: "error" };
+  }
 });
 
 app.get("/api/links", async () => {
