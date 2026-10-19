@@ -14,6 +14,7 @@ app.get("/api/health", async (req, rep) => {
     return { status: "ok", db: "ok" };
   } catch (error) {
     rep.code(503);
+    req.log.error(error);
 
     return { status: "error", db: "error" };
   }

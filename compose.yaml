@@ -11,6 +11,7 @@ services:
       - caddy_data:/data
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    restart: unless-stopped
 
   db:
     image: postgres:18
@@ -20,6 +21,7 @@ services:
     volumes:
       - db-data:/var/lib/postgresql
       - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    restart: unless-stopped
 
   api:
     build: .
@@ -29,6 +31,7 @@ services:
       - "127.0.0.1:3000:3000"
     depends_on:
       - db
+    restart: unless-stopped
 
 volumes:
   db-data:
