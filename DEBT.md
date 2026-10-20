@@ -100,7 +100,15 @@ Worked example:
 
 - compose.yaml: `"443:443"` under the `caddy` service
   Told: HTTPS arrives on 443, so the host passes it to Caddy's container. An open port is not enough: with `:80` in the `Caddyfile`, curl got `(35) SSL_connect` (door open, nobody inside), not `(7) Couldn't connect` (no door). Caddy listens on 443 only when the address line has a name. Seen on the VPS: port 80 answers `308 Permanent Redirect` + `Location: https://…`, before any password check.
-  Open: I know `"443:443"` forwards TCP; I don't know why HTTP/3 (`alt-svc: h3`) would need `"443:443/udp"` as well.
+  Open: I know `"443:443"` forwards TCP; I don't know why HTTP/3 (`alt-svc: h3`) would need `"443:443/udp"` as well. *(Answered 2026-10-15, see the next entry; clear both together.)*
+
+- compose.yaml: `"443:443/udp"` under the `caddy` service
+  Told: every port exists twice, TCP and UDP. `"443:443"` means `/tcp` by default. HTTP/3 runs on QUIC, which runs on UDP, so Caddy's `alt-svc: h3` promise needs the UDP door too. Seen: `ss` showed `udp UNCONN … :443` held by `docker-proxy`; Chrome's Protocol column went `h2` → `h3` after a few reloads.
+  Open: I know HTTP/3 needs UDP; I don't know what QUIC does about lost packets that TCP did for me before.
+
+- caddy/Caddyfile: `encode zstd gzip`
+  Told: Caddy compresses responses while sending them, in the first format the browser lists in `Accept-Encoding`. My JS went from 216 KB to about 70 KB (`content-encoding: zstd`), and `content-length` disappeared, because the size is not known when the headers go out.
+  Open: I know it shrinks text files; I don't know if Caddy also compresses images, or why compressing a JPEG would be pointless.
 
 - compose.yaml: `caddy_data:/data` under `caddy`, and `caddy_data:` under the top-level `volumes:`
   Told: Caddy saves its certificate in `/data` (path fixed by the image). Without a named volume, every recreated container asks Let's Encrypt again, and the limit is 5 certificates per name per week. `caddy_data` is my name; same pattern as `db-data:/var/lib/postgresql`.
@@ -113,6 +121,10 @@ Worked example:
 - compose.yaml: `environment: SITE_ADDRESS: ${SITE_ADDRESS:-:80}` under `caddy`
   Told: passes `SITE_ADDRESS` into the Caddy container. `:-:80` is Compose's syntax for "if missing or empty in `.env`, use `:80`". The Mac's `.env` has no `SITE_ADDRESS`, so it gets `:80`; the VPS `.env` will hold the domain.
   Open: I know the default fills the gap; I don't know where else Compose looks for `SITE_ADDRESS` besides `.env`.
+
+- compose.yaml: `restart: unless-stopped` under `caddy`, `db` and `api`
+  Told: tells the Docker daemon to start the container again by itself, e.g. after a VPS reboot. A container I stop by hand stays stopped. It is a container setting, so adding it recreated all three. Seen: after `sudo reboot`, `compose ps` showed `CREATED 10 minutes ago`, `Up 43 seconds`: the same containers, restarted, with no `up -d`.
+  Open: I know it brings the app back after a reboot; I don't know what it does when a container crashes again right after every start.
 
 ## Cleared
 
