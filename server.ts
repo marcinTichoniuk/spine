@@ -40,4 +40,9 @@ app.post("/api/links", async (req, rep) => {
   rep.code(201).send({ data: res.rows[0], status: "ok" });
 });
 
+process.on("SIGTERM", async () => {
+  await app.close();
+  await pool.end();
+});
+
 await app.listen({ port: 3000, host: "0.0.0.0" });
