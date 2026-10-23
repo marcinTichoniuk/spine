@@ -128,7 +128,7 @@ Worked example:
 
 - server.ts: `process.on("SIGTERM", async () => { await app.close(); await pool.end(); })`
   Told: `docker stop` sends SIGTERM ("please stop"), waits 10 s, then SIGKILL (exit 137). Node is PID 1 in the container, and Linux gives PID 1 no default "die on SIGTERM", so with no handler it waited the full 10 s. The handler closes Fastify (open requests finish), then the Postgres pool; then Node has nothing left to do and exits with 0. Seen: `time docker compose stop api` 10.2 s → 0.18 s, `Exited (0)`.
-  Open (proposed, confirm next session): I know the handler makes the stop fast; I don't know what happens to a request that is still running when SIGTERM comes.
+  Open: I know running requests finish before the stop; I don't know what happens to a request that takes longer than 10 s.
 
 ## Cleared
 
