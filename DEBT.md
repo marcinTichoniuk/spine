@@ -56,7 +56,7 @@ Worked example:
 
 - compose.yaml: `- db-data:/var/lib/postgresql` and the bottom `volumes: db-data:`
   Told: a plain name on the left = a named volume Docker manages; a path (`./schema.sql`) = a file from my machine. The bottom block declares the named volume. From Postgres 18 the data lives in `/var/lib/postgresql`, not `/data` as in most online examples.
-  Open: I know the data survives `down`; I don't know where the volume physically is on the Mac or the VPS.
+  Open: I know the data survives `down`; I don't know where the volume physically is on the Mac or the VPS. *(Answered 2026-10-26: at `/var/lib/docker/volumes/spine_db-data/_data` where the daemon runs: inside the OrbStack VM on the Mac, on the VPS disk itself. `down` keeps it, `down -v` deletes it. Clear after the `compose.yaml` rewrite.)*
 
 - compose.yaml: `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}` and `./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro`
   Told: Compose fills `${...}` from `spine/.env`; the container sees only what is under `environment:`. The image uses the password and runs `schema.sql` **only on first start with an empty data folder**, so changing the password in `.env` later breaks the login.
@@ -64,7 +64,7 @@ Worked example:
 
 - compose.yaml: `ports: - "3000:3000"`, `@db:5432`, `depends_on: - db`
   Told: `<Mac port>:<container port>`; Docker forwards to the container's `eth0` door, so the app must listen on `0.0.0.0`. Service names work as hostnames on the Compose network. `depends_on` waits for the container to start, not for Postgres to be ready.
-  Open: I don't know what on my Mac holds port 3000 while forwarding, who answers the name `db`, or what "ready" would mean for `depends_on`.
+  Open: I don't know what on my Mac holds port 3000 while forwarding, who answers the name `db`, or what "ready" would mean for `depends_on`. *(Partly answered: `db` = Docker's DNS server, 2026-10-25. Port 3000 = OrbStack's app on macOS listens and forwards into the VM, seen with `lsof` on 2026-11-06. Still open: "ready" for `depends_on`. Clear after step 12 part 4 and the rewrite.)*
 
 - caddy/Caddyfile: `:80 { respond "hello from caddy" }`
   Told: `:80` is the site address: any name, port 80, plain HTTP, so Caddy turns automatic HTTPS off (its log says so). `respond` is a directive: answer every request with this text and status 200.
