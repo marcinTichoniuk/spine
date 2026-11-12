@@ -64,7 +64,7 @@ Worked example:
 
 - compose.yaml: `ports: - "3000:3000"`, `@db:5432`, `depends_on: - db`
   Told: `<Mac port>:<container port>`; Docker forwards to the container's `eth0` door, so the app must listen on `0.0.0.0`. Service names work as hostnames on the Compose network. `depends_on` waits for the container to start, not for Postgres to be ready.
-  Open: I don't know what on my Mac holds port 3000 while forwarding, who answers the name `db`, or what "ready" would mean for `depends_on`. *(Partly answered: `db` = Docker's DNS server, 2026-10-25. Port 3000 = OrbStack's app on macOS listens and forwards into the VM, seen with `lsof` on 2026-11-06. Still open: "ready" for `depends_on`. Clear after step 12 part 4 and the rewrite.)*
+  Open: I don't know what on my Mac holds port 3000 while forwarding, who answers the name `db`, or what "ready" would mean for `depends_on`. *(Partly answered: `db` = Docker's DNS server, 2026-10-25. Port 3000 = OrbStack's app on macOS listens and forwards into the VM, seen with `lsof` on 2026-11-06. "Ready" answered 2026-11-09: Postgres accepts connections, checked by a `healthcheck` (`pg_isready`, exit code 0 = healthy); `api` waits with `condition: service_healthy`. All three parts answered. Clear after the `compose.yaml` rewrite.)*
 
 - caddy/Caddyfile: `:80 { respond "hello from caddy" }`
   Told: `:80` is the site address: any name, port 80, plain HTTP, so Caddy turns automatic HTTPS off (its log says so). `respond` is a directive: answer every request with this text and status 200.
